@@ -1,0 +1,568 @@
+import streamlit as st
+
+# Page Configuration
+st.set_page_config(
+    page_title="Eclipse",
+    page_icon="🌙",
+    layout="centered"
+)
+
+# Custom Styling for Dark Theme & Moon Rise Logo
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #121212;
+        color: #f5f5f5;
+    }
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 5px 0px;
+    }
+    .brand-logo-moon {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        border: 2px solid #ffd700;
+        color: #f5f5f5;
+        font-size: 26px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0px 4px 15px rgba(255, 215, 0, 0.3);
+    }
+    .brand-title {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        color: #ffffff;
+        margin: 0;
+    }
+    .stTextInput input, .stTextArea textarea {
+        background-color: #1e1e1e !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
+    }
+    div[data-testid="stForm"] {
+        background-color: #1e1e1e;
+        border-radius: 10px;
+        padding: 15px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Initialize Session State
+if "posts" not in st.session_state:
+    st.session_state.posts = []
+
+if "reels" not in st.session_state:
+    st.session_state.reels = []
+
+if "next_post_id" not in st.session_state:
+    st.session_state.next_post_id = 1
+
+if "user_profiles" not in st.session_state:
+    st.session_state.user_profiles = {}
+
+if "saved_posts" not in st.session_state:
+    st.session_state.saved_posts = []
+
+if "follows" not in st.session_state:
+    st.session_state.follows = {}
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if "stories" not in st.session_state:
+    st.session_state.stories = []
+
+if "notes" not in st.session_state:
+    st.session_state.notes = {
+        "rohit_07": "Chilling under the moonlight 🌙",
+        "priya_vibe": "Living my best life ✨"
+    }
+
+if "notifications_enabled" not in st.session_state:
+    st.session_state.notifications_enabled = True
+
+if "notification_logs" not in st.session_state:
+    st.session_state.notification_logs = [
+        "👋 Welcome to Eclipse! Your app is ready."
+    ]
+
+current_logged_user = "eclipse_user"
+
+# Ensure default user profile initialized
+if current_logged_user not in st.session_state.user_profiles:
+    st.session_state.user_profiles[current_logged_user] = {
+        "bio": "Welcome to Eclipse! ✨", 
+        "dp": None,
+        "is_private": False
+    }
+
+# Setup sample friends accounts
+sample_users = [
+    ("rohit_07", False),
+    ("priya_vibe", True),
+    ("alex_pro", True)
+]
+
+for username, is_priv in sample_users:
+    if username not in st.session_state.user_profiles:
+        st.session_state.user_profiles[username] = {
+            "bio": f"Hey there! I am @{username}",
+            "dp": None,
+            "is_private": is_priv
+        }
+
+# Setup default follow connections
+st.session_state.follows.setdefault("priya_vibe", set()).add(current_logged_user.lower())
+st.session_state.follows.setdefault("rohit_07", set()).add(current_logged_user.lower())
+st.session_state.follows.setdefault(current_logged_user.lower(), set()).add("rohit_07")
+st.session_state.follows.setdefault(current_logged_user.lower(), set()).add("priya_vibe")
+
+# --- TOP APP HEADER WITH MOON RISE LOGO & ECLIPSE NAME ---
+header_col1, header_col2 = st.columns([4, 1])
+with header_col1:
+    st.markdown(
+        """
+        <div class="logo-container">
+            <div class="brand-logo-moon">🌕</div>
+            <div>
+                <h1 class="brand-title">Eclipse</h1>
+                <span style="color: #aaaaaa; font-size: 13px;">Under the Moonlit Sky ✨</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with header_col2:
+    st.session_state.notifications_enabled = st.toggle(
+        "🔔", 
+        value=st.session_state.notifications_enabled,
+        help="Toggle Notifications"
+    )
+
+if st.session_state.notifications_enabled and st.session_state.notification_logs:
+    st.toast(st.session_state.notification_logs[-1], icon="🔔")
+
+st.divider()
+
+# --- Helper Function to Render Post ---
+def show_post(post, idx):
+    post_id = post.get('id', idx)
+    post_author = post.get('username', 'User').strip().lower()
+
+    author_profile = st.session_state.user_profiles.get(post_author, {})
+    is_private = author_profile.get("is_private", False)
+    
+    followers = st.session_state.follows.get(post_author, set())
+    is_following = current_logged_user.lower() in followers
+    is_own_post = (post_author == current_logged_user.lower())
+
+    with st.container(border=True):
+        col1, col2, col3 = st.columns([3, 1.5, 1])
+        
+        with col1:
+            privacy_icon = "🔒 " if is_private else "🌐 "
+            st.markdown(f"### {privacy_icon}👤 @{post.get('username', 'User')}")
+
+        with col2:
+            if not is_own_post:
+                btn_txt = "✓ Following" if is_following else "➕ Follow"
+                if st.button(btn_txt, key=f"fol_{post_id}_{idx}"):
+                    user_followers = st.session_state.follows.setdefault(post_author, set())
+                    if is_following:
+                        user_followers.remove(current_logged_user.lower())
+                    else:
+                        user_followers.add(current_logged_user.lower())
+                        log_msg = f"✨ @{current_logged_user} started following @{post_author}!"
+                        st.session_state.notification_logs.append(log_msg)
+                    st.rerun()
+
+        with col3:
+            if is_own_post:
+                if st.button("🗑️", key=f"del_{post_id}_{idx}"):
+                    st.session_state.posts = [p for p in st.session_state.posts if p.get('id') != post_id]
+                    if post_id in st.session_state.saved_posts:
+                        st.session_state.saved_posts.remove(post_id)
+                    st.rerun()
+
+        if is_private and not is_following and not is_own_post:
+            st.warning("🔒 **Private Account:** Follow this user to see their posts and photos.")
+            return
+
+        if post.get("image") is not None:
+            st.image(post["image"], use_container_width=True)
+
+        if post.get("caption"):
+            st.write(post["caption"])
+
+        btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 1])
+        
+        is_liked = post.get("liked", False)
+        likes_count = post.get("likes", 0)
+        btn_label = "❤️ Liked" if is_liked else "🤍 Like"
+
+        with btn_col1:
+            if st.button(f"{btn_label} ({likes_count})", key=f"like_{post_id}_{idx}"):
+                post["liked"] = not is_liked
+                post["likes"] = likes_count + 1 if post["liked"] else max(0, likes_count - 1)
+                st.rerun()
+
+        is_saved = post_id in st.session_state.saved_posts
+        save_label = "🔖 Saved" if is_saved else "🏷️ Save"
+
+        with btn_col2:
+            if st.button(f"{save_label}", key=f"save_{post_id}_{idx}"):
+                if is_saved:
+                    st.session_state.saved_posts.remove(post_id)
+                else:
+                    st.session_state.saved_posts.append(post_id)
+                st.rerun()
+
+        with btn_col3:
+            show_share = st.button("✈️ Send", key=f"share_btn_{post_id}_{idx}")
+
+        if f"share_open_{post_id}_{idx}" not in st.session_state:
+            st.session_state[f"share_open_{post_id}_{idx}"] = False
+
+        if show_share:
+            st.session_state[f"share_open_{post_id}_{idx}"] = not st.session_state[f"share_open_{post_id}_{idx}"]
+
+        if st.session_state[f"share_open_{post_id}_{idx}"]:
+            with st.expander("✈️ Send Post to Friends", expanded=True):
+                following_list = [
+                    target for target, followers in st.session_state.follows.items()
+                    if current_logged_user.lower() in followers
+                ]
+                
+                if not following_list:
+                    st.info("You are not following anyone yet.")
+                else:
+                    selected_friend = st.selectbox("Select friend to send:", following_list, key=f"sel_{post_id}_{idx}")
+                    custom_msg = st.text_input("Message (optional):", key=f"msg_txt_{post_id}_{idx}")
+                    
+                    if st.button("Send Message 🚀", key=f"send_act_{post_id}_{idx}"):
+                        msg_body = f"Shared a post: {post.get('caption', 'Check this out!')}"
+                        if custom_msg.strip():
+                            msg_body += f" - '{custom_msg.strip()}'"
+                            
+                        st.session_state.messages.append({
+                            "sender": current_logged_user,
+                            "receiver": selected_friend.lower().strip(),
+                            "text": msg_body
+                        })
+                        st.success(f"Post sent to @{selected_friend}! ✈️")
+                        st.session_state[f"share_open_{post_id}_{idx}"] = False
+                        st.rerun()
+
+        st.markdown("---")
+        st.markdown("💬 **Comments**")
+        comments = post.get("comments", [])
+        for c in comments:
+            st.info(c)
+            
+        c_text = st.text_input("Write a comment...", key=f"c_in_{post_id}_{idx}", placeholder="Type here...")
+        if st.button("Post Comment", key=f"c_btn_{post_id}_{idx}"):
+            if c_text.strip():
+                if "comments" not in post:
+                    post["comments"] = []
+                post["comments"].append(c_text.strip())
+                st.rerun()
+
+# --- TABS NAVIGATION ---
+tab_feed, tab_stories, tab_reels, tab_post, tab_chat, tab_notifs, tab_profile = st.tabs([
+    "🏠 Feed", "📸 Stories", "🎬 Reels", "✍️ Post", "💬 Chat", "🔔 Notifs", "👤 Profile"
+])
+
+# 1. HOME FEED
+with tab_feed:
+    st.subheader("🏠 Home Feed")
+    s_query = st.text_input("🔍 Search posts", placeholder="Search username or caption...")
+
+    f_posts = st.session_state.posts
+    if s_query.strip():
+        f_posts = [
+            p for p in f_posts 
+            if s_query.lower() in p.get("username", "").lower() 
+            or s_query.lower() in p.get("caption", "").lower()
+        ]
+
+    if not f_posts:
+        st.info("No posts in your feed. Create a new post or follow friends!")
+    else:
+        for i, p in enumerate(f_posts):
+            show_post(p, i)
+
+# 2. STORIES & NOTES
+with tab_stories:
+    st.subheader("📸 Stories & Notes Feed")
+    
+    st.markdown("### 💭 Notes from Everyone")
+    user_note = st.text_input("Update your Note (60 chars max):", max_chars=60, placeholder="What's on your mind?")
+    if st.button("Publish Note 🎵"):
+        if user_note.strip():
+            st.session_state.notes[current_logged_user] = user_note.strip()
+            st.success("Your note updated!")
+            st.rerun()
+
+    st.markdown("#### 🌟 Active Notes by Users")
+    for user, note in st.session_state.notes.items():
+        st.info(f"💭 **@{user}**: {note}")
+
+    st.divider()
+
+    st.markdown("### 📸 Add to Your Story")
+    story_img = st.file_uploader("Upload Story Image", type=["jpg", "png", "jpeg"], key="story_up")
+    if st.button("Publish Story ✨"):
+        if story_img:
+            st.session_state.stories.append({
+                "username": current_logged_user,
+                "image": story_img.getvalue()
+            })
+            st.success("Story posted successfully!")
+            st.rerun()
+
+    st.markdown("#### ⭕ Friends & Active Stories")
+    if not st.session_state.stories:
+        st.info("No active stories right now.")
+    else:
+        for idx, story in enumerate(st.session_state.stories):
+            with st.expander(f"⭕ Story by @{story['username']}"):
+                st.image(story["image"], use_container_width=True)
+
+# 3. REELS & REPOST
+with tab_reels:
+    st.subheader("🎬 Eclipse Reels")
+    
+    with st.expander("➕ Upload New Reel"):
+        reel_file = st.file_uploader("Upload Reel Video (.mp4)", type=["mp4", "mov"], key="reel_up")
+        reel_caption = st.text_input("Reel Caption", placeholder="Write something about your reel...")
+        if st.button("Publish Reel 🚀"):
+            if reel_file:
+                st.session_state.reels.insert(0, {
+                    "username": current_logged_user,
+                    "video": reel_file.getvalue(),
+                    "caption": reel_caption,
+                    "likes": 0,
+                    "liked": False,
+                    "reposted_by": None
+                })
+                st.success("Reel published successfully! 🎉")
+                st.rerun()
+            else:
+                st.warning("Please upload a video file.")
+
+    st.divider()
+
+    if not st.session_state.reels:
+        st.info("No reels available yet. Upload your first reel above! 🎬")
+    else:
+        for r_idx, reel in enumerate(st.session_state.reels):
+            with st.container(border=True):
+                if reel.get("reposted_by"):
+                    st.caption(f"🔄 **Reposted by @{reel['reposted_by']}** (Original: @{reel['username']})")
+                else:
+                    st.markdown(f"### 👤 @{reel['username']}")
+
+                st.video(reel["video"])
+                if reel["caption"]:
+                    st.write(reel["caption"])
+                
+                r_col1, r_col2 = st.columns(2)
+                
+                r_liked = reel.get("liked", False)
+                r_likes = reel.get("likes", 0)
+                r_label = "❤️ Liked" if r_liked else "🤍 Like"
+                with r_col1:
+                    if st.button(f"{r_label} ({r_likes})", key=f"reel_like_{r_idx}"):
+                        reel["liked"] = not r_liked
+                        reel["likes"] = r_likes + 1 if reel["liked"] else max(0, r_likes - 1)
+                        st.rerun()
+
+                with r_col2:
+                    if st.button("🔄 Repost Reel", key=f"repost_btn_{r_idx}"):
+                        reposted_reel = {
+                            "username": reel["username"],
+                            "video": reel["video"],
+                            "caption": reel["caption"],
+                            "likes": 0,
+                            "liked": False,
+                            "reposted_by": current_logged_user
+                        }
+                        st.session_state.reels.insert(0, reposted_reel)
+                        st.session_state.notification_logs.append(f"🔄 You reposted a reel by @{reel['username']}!")
+                        st.success(f"Reel reposted to your feed! 🚀")
+                        st.rerun()
+
+# 4. CREATE POST
+with tab_post:
+    st.subheader("✍️ Create a New Post")
+    u_name = st.text_input("Your username", value=current_logged_user)
+    up_img = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg", "webp"])
+    u_cap = st.text_area("Write Caption", placeholder="What's on your mind?")
+
+    if st.button("📮 Publish", type="primary"):
+        if not u_name.strip():
+            st.warning("Please enter username.")
+        elif not u_cap.strip() and up_img is None:
+            st.warning("Please add caption or image.")
+        else:
+            img_bytes = up_img.getvalue() if up_img else None
+            new_p = {
+                "id": st.session_state.next_post_id,
+                "username": u_name.strip(),
+                "caption": u_cap.strip(),
+                "image": img_bytes,
+                "likes": 0,
+                "liked": False,
+                "comments": []
+            }
+            st.session_state.posts.insert(0, new_p)
+            st.session_state.next_post_id += 1
+            st.success("Post published on Eclipse! 🎉")
+
+# 5. DIRECT MESSAGES
+with tab_chat:
+    st.subheader("💬 Direct Messages (Chat)")
+    
+    following_users = [
+        target for target, followers in st.session_state.follows.items() 
+        if current_logged_user.lower() in followers
+    ]
+    
+    if following_users:
+        recipient = st.selectbox("Select user to chat with:", following_users)
+    else:
+        recipient = st.text_input("Chat with (Username):", value="friend_user")
+        
+    st.divider()
+
+    chat_history = [
+        m for m in st.session_state.messages 
+        if (m["sender"] == current_logged_user and m["receiver"] == recipient.lower())
+        or (m["sender"] == recipient.lower() and m["receiver"] == current_logged_user)
+    ]
+
+    if not chat_history:
+        st.caption("No messages in this chat yet.")
+    else:
+        for msg in chat_history:
+            if msg["sender"] == current_logged_user:
+                st.write(f"🟢 **You**: {msg['text']}")
+            else:
+                st.write(f"🔵 **@{msg['sender']}**: {msg['text']}")
+
+    st.divider()
+    msg_text = st.text_input("Type a message...", key="chat_input")
+    if st.button("Send 🚀"):
+        if msg_text.strip():
+            st.session_state.messages.append({
+                "sender": current_logged_user,
+                "receiver": recipient.lower().strip(),
+                "text": msg_text.strip()
+            })
+            st.rerun()
+
+# 6. NOTIFICATIONS
+with tab_notifs:
+    st.subheader("🔔 Notification Center")
+    st.markdown("Recent activity and follower alerts:")
+    
+    if not st.session_state.notification_logs:
+        st.info("No notifications yet.")
+    else:
+        for log in reversed(st.session_state.notification_logs):
+            st.info(log)
+
+# 7. PROFILE SECTION
+with tab_profile:
+    st.subheader("👤 My Profile")
+    p_user = st.text_input("Enter Profile Username", value=current_logged_user)
+    p_user_clean = p_user.strip().lower()
+    
+    if p_user_clean not in st.session_state.user_profiles:
+        st.session_state.user_profiles[p_user_clean] = {
+            "bio": "Welcome to Eclipse! ✨", 
+            "dp": None,
+            "is_private": False
+        }
+
+    user_p = st.session_state.user_profiles[p_user_clean]
+
+    with st.expander("⚙️ Edit Profile & Privacy Settings"):
+        nbio = st.text_input("Bio", value=user_p.get("bio", ""))
+        ndp = st.file_uploader("Profile Pic", type=["jpg", "png", "jpeg"])
+        
+        is_priv = st.toggle("🔒 Private Account", value=user_p.get("is_private", False))
+
+        if st.button("Save Changes"):
+            user_p["bio"] = nbio
+            user_p["is_private"] = is_priv
+            if ndp:
+                user_p["dp"] = ndp.getvalue()
+            st.success("Profile & Privacy settings updated!")
+            st.rerun()
+
+    c1, c2 = st.columns([1, 3])
+    with c1:
+        if user_p.get("dp"):
+            st.image(user_p["dp"], width=80)
+        else:
+            st.markdown("## 👤")
+    with c2:
+        badge = "🔒 Private Account" if user_p.get("is_private") else "🌐 Public Account"
+        st.markdown(f"### @{p_user}")
+        st.caption(f"Status: **{badge}**")
+        st.write(f"📝 {user_p.get('bio', '')}")
+
+    followers_set = st.session_state.follows.get(p_user_clean, set())
+    followers_list = list(followers_set)
+    
+    following_list = [
+        target for target, followers in st.session_state.follows.items() 
+        if p_user_clean in followers
+    ]
+
+    my_posts = [p for p in st.session_state.posts if p.get("username", "").lower() == p_user_clean]
+
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Posts", len(my_posts))
+    m2.metric("Followers", len(followers_list))
+    m3.metric("Following", len(following_list))
+
+    st.divider()
+
+    col_f1, col_f2 = st.columns(2)
+    
+    with col_f1:
+        with st.expander(f"👥 View Followers ({len(followers_list)})"):
+            if not followers_list:
+                st.caption("No followers yet.")
+            else:
+                for f_user in followers_list:
+                    st.write(f"👤 **@{f_user}**")
+
+    with col_f2:
+        with st.expander(f"👥 View Following ({len(following_list)})"):
+            if not following_list:
+                st.caption("Not following anyone yet.")
+            else:
+                for f_user in following_list:
+                    st.write(f"👤 **@{f_user}**")
+
+    st.divider()
+
+    st.markdown("### 🖼️ Your Posts")
+    if not my_posts:
+        st.info(f"No posts found for @{p_user}")
+    else:
+        for i, p in enumerate(my_posts):
+            show_post(p, i)
