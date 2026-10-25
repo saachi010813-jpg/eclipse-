@@ -1,568 +1,1311 @@
 import streamlit as st
 
-# Page Configuration
-st.set_page_config(
-    page_title="Eclipse",
-    page_icon="🌙",
-    layout="centered"
-)
+st.set_page_config(page_title="Eclipse 🌙", layout="wide")
 
-# Custom Styling for Dark Theme & Moon Rise Logo
-st.markdown(
-    """
+html_code = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eclipse 🌙</title>
     <style>
-    .stApp {
-        background-color: #121212;
-        color: #f5f5f5;
-    }
-    .logo-container {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 5px 0px;
-    }
-    .brand-logo-moon {
-        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-        border: 2px solid #ffd700;
-        color: #f5f5f5;
-        font-size: 26px;
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0px 4px 15px rgba(255, 215, 0, 0.3);
-    }
-    .brand-title {
-        font-size: 30px;
-        font-weight: 800;
-        letter-spacing: 0.8px;
-        color: #ffffff;
-        margin: 0;
-    }
-    .stTextInput input, .stTextArea textarea {
-        background-color: #1e1e1e !important;
-        color: #ffffff !important;
-        border: 1px solid #333333 !important;
-    }
-    div[data-testid="stForm"] {
-        background-color: #1e1e1e;
-        border-radius: 10px;
-        padding: 15px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# Initialize Session State
-if "posts" not in st.session_state:
-    st.session_state.posts = []
-
-if "reels" not in st.session_state:
-    st.session_state.reels = []
-
-if "next_post_id" not in st.session_state:
-    st.session_state.next_post_id = 1
-
-if "user_profiles" not in st.session_state:
-    st.session_state.user_profiles = {}
-
-if "saved_posts" not in st.session_state:
-    st.session_state.saved_posts = []
-
-if "follows" not in st.session_state:
-    st.session_state.follows = {}
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if "stories" not in st.session_state:
-    st.session_state.stories = []
-
-if "notes" not in st.session_state:
-    st.session_state.notes = {
-        "rohit_07": "Chilling under the moonlight 🌙",
-        "priya_vibe": "Living my best life ✨"
-    }
-
-if "notifications_enabled" not in st.session_state:
-    st.session_state.notifications_enabled = True
-
-if "notification_logs" not in st.session_state:
-    st.session_state.notification_logs = [
-        "👋 Welcome to Eclipse! Your app is ready."
-    ]
-
-current_logged_user = "eclipse_user"
-
-# Ensure default user profile initialized
-if current_logged_user not in st.session_state.user_profiles:
-    st.session_state.user_profiles[current_logged_user] = {
-        "bio": "Welcome to Eclipse! ✨", 
-        "dp": None,
-        "is_private": False
-    }
-
-# Setup sample friends accounts
-sample_users = [
-    ("rohit_07", False),
-    ("priya_vibe", True),
-    ("alex_pro", True)
-]
-
-for username, is_priv in sample_users:
-    if username not in st.session_state.user_profiles:
-        st.session_state.user_profiles[username] = {
-            "bio": f"Hey there! I am @{username}",
-            "dp": None,
-            "is_private": is_priv
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-# Setup default follow connections
-st.session_state.follows.setdefault("priya_vibe", set()).add(current_logged_user.lower())
-st.session_state.follows.setdefault("rohit_07", set()).add(current_logged_user.lower())
-st.session_state.follows.setdefault(current_logged_user.lower(), set()).add("rohit_07")
-st.session_state.follows.setdefault(current_logged_user.lower(), set()).add("priya_vibe")
+        body {
+            background-color: #000000;
+            color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-# --- TOP APP HEADER WITH MOON RISE LOGO & ECLIPSE NAME ---
-header_col1, header_col2 = st.columns([4, 1])
-with header_col1:
-    st.markdown(
-        """
-        <div class="logo-container">
-            <div class="brand-logo-moon">🌕</div>
+        /* App Main Grid Layout */
+        .app-layout {
+            display: flex;
+            width: 100%;
+            max-width: 1250px;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Left Navigation Sidebar */
+        .left-sidebar {
+            width: 245px;
+            border-right: 1px solid #262626;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .brand-logo {
+            font-size: 24px;
+            font-weight: 700;
+            padding: 12px 16px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(45deg, #ffffff, #a1a1a1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            list-style: none;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-item-btn {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #f5f5f5;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item-btn:hover {
+            background-color: #121212;
+        }
+
+        .nav-item-btn.active {
+            font-weight: 700;
+        }
+
+        .nav-icon {
+            font-size: 22px;
+            width: 28px;
+            text-align: center;
+        }
+
+        /* Center Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 630px;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .view-section {
+            display: none;
+            width: 100%;
+            max-width: 470px;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* Stories & Notes Tray */
+        .tray-wrapper {
+            width: 100%;
+            padding: 12px 0 16px 0;
+            border-bottom: 1px solid #1a1a1a;
+            margin-bottom: 16px;
+        }
+
+        .horizontal-scroll-tray {
+            display: flex;
+            gap: 18px;
+            overflow-x: auto;
+            padding: 0 8px;
+            scrollbar-width: none;
+        }
+
+        .horizontal-scroll-tray::-webkit-scrollbar {
+            display: none;
+        }
+
+        .story-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            width: 72px;
+            position: relative;
+        }
+
+        .story-ring-gradient {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            padding: 2.5px;
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+
+        .story-node:hover .story-ring-gradient {
+            transform: scale(1.03);
+        }
+
+        .story-ring-gradient.seen {
+            background: #262626;
+        }
+
+        .story-avatar-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #000;
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            overflow: hidden;
+        }
+
+        .story-label-text {
+            font-size: 11px;
+            color: #f5f5f5;
+            margin-top: 6px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .note-bubble-popup {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid #333;
+            color: #fff;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            z-index: 5;
+        }
+
+        .story-add-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: #0095f6;
+            color: #fff;
+            border-radius: 50%;
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Post Cards */
+        .post-card {
+            background-color: #000000;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+        }
+
+        .post-user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .post-avatar-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #262626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .post-username-text {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .post-media-box {
+            width: 100%;
+            height: 380px;
+            background: linear-gradient(135deg, #121212, #1e1e24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            user-select: none;
+            position: relative;
+        }
+
+        .post-actions-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 14px 6px 14px;
+        }
+
+        .action-btns-left {
+            display: flex;
+            gap: 16px;
+        }
+
+        .action-btn-item {
+            background: none;
+            border: none;
+            color: #f5f5f5;
+            font-size: 22px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .action-btn-item:active {
+            transform: scale(1.2);
+        }
+
+        .action-btn-item.liked {
+            color: #ff3040;
+        }
+
+        .post-likes-count {
+            padding: 0 14px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .post-caption-box {
+            padding: 0 14px 12px 14px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .post-caption-box b {
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        /* Reels Player View */
+        .reels-container {
+            width: 100%;
+            max-width: 400px;
+            height: 650px;
+            background: linear-gradient(180deg, #1f1c2c, #000000);
+            border-radius: 12px;
+            border: 1px solid #262626;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            margin: 0 auto;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+        }
+
+        .reel-center-media {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 90px;
+        }
+
+        .reel-overlay-right {
+            position: absolute;
+            right: 16px;
+            bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .reel-action-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .reel-action-lbl {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .reel-bottom-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 75%;
+        }
+
+        .reel-user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reel-follow-tag {
+            border: 1px solid #fff;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Right Sidebar (Followers List) */
+        .right-sidebar {
+            width: 320px;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .user-profile-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-dp {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #262626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .user-names {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-handle {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-fullname {
+            font-size: 12px;
+            color: #a8a8a8;
+        }
+
+        .switch-btn {
+            background: none;
+            border: none;
+            color: #0095f6;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .suggestions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suggestions-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #a8a8a8;
+        }
+
+        .see-all-btn {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .followers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .follower-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .follower-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .follower-dp {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #262626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .follow-action-btn {
+            background: none;
+            border: none;
+            color: #0095f6;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Direct Chat Card */
+        .chat-container-card {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #262626;
+            border-radius: 12px;
+            display: flex;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        .chat-contacts-sidebar {
+            width: 180px;
+            border-right: 1px solid #262626;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-contacts-header {
+            padding: 16px;
+            font-weight: 700;
+            border-bottom: 1px solid #262626;
+        }
+
+        .chat-contacts-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .contact-item-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .contact-item-row:hover, .contact-item-row.active {
+            background-color: #121212;
+        }
+
+        .contact-dp {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #262626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .chat-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-window-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #262626;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .chat-messages-area {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 8px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message-bubble.sent {
+            background-color: #3797f0;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-bubble.received {
+            background-color: #262626;
+            color: #fff;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-bar {
+            padding: 12px;
+            border-top: 1px solid #262626;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input-field {
+            flex: 1;
+            background: #121212;
+            border: 1px solid #262626;
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: #fff;
+            outline: none;
+        }
+
+        .chat-send-btn {
+            background: none;
+            border: none;
+            color: #0095f6;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+
+        /* Profile Layout */
+        .profile-header-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 20px;
+            padding: 20px 0;
+            align-items: center;
+        }
+
+        .profile-dp-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #262626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            border: 2px solid #333;
+        }
+
+        .profile-meta-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .profile-username-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .edit-profile-btn {
+            background-color: #262626;
+            color: #fff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .profile-stats-bar {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+        }
+
+        .profile-bio-text {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .posts-grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-top: 20px;
+        }
+
+        .grid-post-square {
+            aspect-ratio: 1;
+            background: #121212;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+        }
+
+        .bottom-mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #000;
+            border-top: 1px solid #262626;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        @media (max-width: 1000px) {
+            .right-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .left-sidebar {
+                display: none;
+            }
+            .bottom-mobile-nav {
+                display: flex;
+            }
+            .main-content {
+                padding: 10px 12px 60px 12px;
+            }
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .story-modal-card {
+            width: 90%;
+            max-width: 380px;
+            height: 600px;
+            background: linear-gradient(135deg, #1f1c2c, #928dab);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-layout">
+        
+        <!-- Left Navigation Sidebar -->
+        <div class="left-sidebar">
             <div>
-                <h1 class="brand-title">Eclipse</h1>
-                <span style="color: #aaaaaa; font-size: 13px;">Under the Moonlit Sky ✨</span>
+                <div class="brand-logo" onclick="switchView('feed')">
+                    <span>🌙</span> Eclipse
+                </div>
+                <ul class="nav-links">
+                    <li><button class="nav-item-btn active" id="nav-btn-feed" onclick="switchView('feed')"><span class="nav-icon">🏠</span> Home</button></li>
+                    <li><button class="nav-item-btn" id="nav-btn-reels" onclick="switchView('reels')"><span class="nav-icon">🎬</span> Reels</button></li>
+                    <li><button class="nav-item-btn" id="nav-btn-chat" onclick="switchView('chat')"><span class="nav-icon">💬</span> Messages</button></li>
+                    <li><button class="nav-item-btn" onclick="openCreateStory()"><span class="nav-icon">➕</span> Create Story</button></li>
+                    <li><button class="nav-item-btn" id="nav-btn-profile" onclick="switchView('profile')"><span class="nav-icon">👤</span> Profile</button></li>
+                </ul>
+            </div>
+            <div>
+                <button class="nav-item-btn"><span class="nav-icon">⚙️</span> Settings</button>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
 
-with header_col2:
-    st.session_state.notifications_enabled = st.toggle(
-        "🔔", 
-        value=st.session_state.notifications_enabled,
-        help="Toggle Notifications"
-    )
-
-if st.session_state.notifications_enabled and st.session_state.notification_logs:
-    st.toast(st.session_state.notification_logs[-1], icon="🔔")
-
-st.divider()
-
-# --- Helper Function to Render Post ---
-def show_post(post, idx):
-    post_id = post.get('id', idx)
-    post_author = post.get('username', 'User').strip().lower()
-
-    author_profile = st.session_state.user_profiles.get(post_author, {})
-    is_private = author_profile.get("is_private", False)
-    
-    followers = st.session_state.follows.get(post_author, set())
-    is_following = current_logged_user.lower() in followers
-    is_own_post = (post_author == current_logged_user.lower())
-
-    with st.container(border=True):
-        col1, col2, col3 = st.columns([3, 1.5, 1])
-        
-        with col1:
-            privacy_icon = "🔒 " if is_private else "🌐 "
-            st.markdown(f"### {privacy_icon}👤 @{post.get('username', 'User')}")
-
-        with col2:
-            if not is_own_post:
-                btn_txt = "✓ Following" if is_following else "➕ Follow"
-                if st.button(btn_txt, key=f"fol_{post_id}_{idx}"):
-                    user_followers = st.session_state.follows.setdefault(post_author, set())
-                    if is_following:
-                        user_followers.remove(current_logged_user.lower())
-                    else:
-                        user_followers.add(current_logged_user.lower())
-                        log_msg = f"✨ @{current_logged_user} started following @{post_author}!"
-                        st.session_state.notification_logs.append(log_msg)
-                    st.rerun()
-
-        with col3:
-            if is_own_post:
-                if st.button("🗑️", key=f"del_{post_id}_{idx}"):
-                    st.session_state.posts = [p for p in st.session_state.posts if p.get('id') != post_id]
-                    if post_id in st.session_state.saved_posts:
-                        st.session_state.saved_posts.remove(post_id)
-                    st.rerun()
-
-        if is_private and not is_following and not is_own_post:
-            st.warning("🔒 **Private Account:** Follow this user to see their posts and photos.")
-            return
-
-        if post.get("image") is not None:
-            st.image(post["image"], use_container_width=True)
-
-        if post.get("caption"):
-            st.write(post["caption"])
-
-        btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 1])
-        
-        is_liked = post.get("liked", False)
-        likes_count = post.get("likes", 0)
-        btn_label = "❤️ Liked" if is_liked else "🤍 Like"
-
-        with btn_col1:
-            if st.button(f"{btn_label} ({likes_count})", key=f"like_{post_id}_{idx}"):
-                post["liked"] = not is_liked
-                post["likes"] = likes_count + 1 if post["liked"] else max(0, likes_count - 1)
-                st.rerun()
-
-        is_saved = post_id in st.session_state.saved_posts
-        save_label = "🔖 Saved" if is_saved else "🏷️ Save"
-
-        with btn_col2:
-            if st.button(f"{save_label}", key=f"save_{post_id}_{idx}"):
-                if is_saved:
-                    st.session_state.saved_posts.remove(post_id)
-                else:
-                    st.session_state.saved_posts.append(post_id)
-                st.rerun()
-
-        with btn_col3:
-            show_share = st.button("✈️ Send", key=f"share_btn_{post_id}_{idx}")
-
-        if f"share_open_{post_id}_{idx}" not in st.session_state:
-            st.session_state[f"share_open_{post_id}_{idx}"] = False
-
-        if show_share:
-            st.session_state[f"share_open_{post_id}_{idx}"] = not st.session_state[f"share_open_{post_id}_{idx}"]
-
-        if st.session_state[f"share_open_{post_id}_{idx}"]:
-            with st.expander("✈️ Send Post to Friends", expanded=True):
-                following_list = [
-                    target for target, followers in st.session_state.follows.items()
-                    if current_logged_user.lower() in followers
-                ]
-                
-                if not following_list:
-                    st.info("You are not following anyone yet.")
-                else:
-                    selected_friend = st.selectbox("Select friend to send:", following_list, key=f"sel_{post_id}_{idx}")
-                    custom_msg = st.text_input("Message (optional):", key=f"msg_txt_{post_id}_{idx}")
-                    
-                    if st.button("Send Message 🚀", key=f"send_act_{post_id}_{idx}"):
-                        msg_body = f"Shared a post: {post.get('caption', 'Check this out!')}"
-                        if custom_msg.strip():
-                            msg_body += f" - '{custom_msg.strip()}'"
-                            
-                        st.session_state.messages.append({
-                            "sender": current_logged_user,
-                            "receiver": selected_friend.lower().strip(),
-                            "text": msg_body
-                        })
-                        st.success(f"Post sent to @{selected_friend}! ✈️")
-                        st.session_state[f"share_open_{post_id}_{idx}"] = False
-                        st.rerun()
-
-        st.markdown("---")
-        st.markdown("💬 **Comments**")
-        comments = post.get("comments", [])
-        for c in comments:
-            st.info(c)
+        <!-- Center Main Content -->
+        <div class="main-content">
             
-        c_text = st.text_input("Write a comment...", key=f"c_in_{post_id}_{idx}", placeholder="Type here...")
-        if st.button("Post Comment", key=f"c_btn_{post_id}_{idx}"):
-            if c_text.strip():
-                if "comments" not in post:
-                    post["comments"] = []
-                post["comments"].append(c_text.strip())
-                st.rerun()
+            <!-- 1. FEED VIEW -->
+            <div class="view-section active" id="view-feed">
+                <div class="tray-wrapper">
+                    <div class="horizontal-scroll-tray" id="storiesTrayContainer"></div>
+                </div>
+                <div id="feedPostsContainer"></div>
+            </div>
 
-# --- TABS NAVIGATION ---
-tab_feed, tab_stories, tab_reels, tab_post, tab_chat, tab_notifs, tab_profile = st.tabs([
-    "🏠 Feed", "📸 Stories", "🎬 Reels", "✍️ Post", "💬 Chat", "🔔 Notifs", "👤 Profile"
-])
+            <!-- 2. REELS VIEW (🎬 TAB RESTORED) -->
+            <div class="view-section" id="view-reels">
+                <div class="reels-container">
+                    <div class="reel-center-media" id="reelMediaBox">🌌</div>
+                    
+                    <div class="reel-overlay-right">
+                        <button class="reel-action-btn" onclick="toggleReelLike()">
+                            <span id="reelLikeIcon">❤️</span>
+                            <span class="reel-action-lbl" id="reelLikeCount">12.4k</span>
+                        </button>
+                        <button class="reel-action-btn">
+                            <span>💬</span>
+                            <span class="reel-action-lbl">842</span>
+                        </button>
+                        <button class="reel-action-btn">
+                            <span>✈️</span>
+                            <span class="reel-action-lbl">Share</span>
+                        </button>
+                        <button class="reel-action-btn" onclick="nextReel()">
+                            <span>⏭️</span>
+                            <span class="reel-action-lbl">Next</span>
+                        </button>
+                    </div>
 
-# 1. HOME FEED
-with tab_feed:
-    st.subheader("🏠 Home Feed")
-    s_query = st.text_input("🔍 Search posts", placeholder="Search username or caption...")
+                    <div class="reel-bottom-info">
+                        <div class="reel-user-badge">
+                            <b id="reelUsername">@galaxy_boy</b>
+                            <span class="reel-follow-tag">Follow</span>
+                        </div>
+                        <div style="font-size: 13px;" id="reelCaption">Night aesthetic vibes under the starlight ✨ #eclipse #moon</div>
+                        <div style="font-size: 11px; opacity: 0.8;">♫ Original Audio - Midnight Stargazing</div>
+                    </div>
+                </div>
+            </div>
 
-    f_posts = st.session_state.posts
-    if s_query.strip():
-        f_posts = [
-            p for p in f_posts 
-            if s_query.lower() in p.get("username", "").lower() 
-            or s_query.lower() in p.get("caption", "").lower()
-        ]
+            <!-- 3. MESSAGES / CHAT VIEW -->
+            <div class="view-section" id="view-chat">
+                <div class="tray-wrapper">
+                    <div class="horizontal-scroll-tray" id="notesTrayContainer"></div>
+                </div>
+                <div class="chat-container-card">
+                    <div class="chat-contacts-sidebar">
+                        <div class="chat-contacts-header">Direct</div>
+                        <div class="chat-contacts-list" id="chatContactsList"></div>
+                    </div>
+                    <div class="chat-window">
+                        <div class="chat-window-header" id="activeChatHeader">
+                            <span id="activeChatAvatar">✨</span> <span id="activeChatUsername">@cosmic_star</span>
+                        </div>
+                        <div class="chat-messages-area" id="chatMessagesArea"></div>
+                        <div class="chat-input-bar">
+                            <input type="text" class="chat-input-field" id="chatInputField" placeholder="Message..." onkeypress="handleChatKeyPress(event)">
+                            <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    if not f_posts:
-        st.info("No posts in your feed. Create a new post or follow friends!")
-    else:
-        for i, p in enumerate(f_posts):
-            show_post(p, i)
+            <!-- 4. PROFILE VIEW -->
+            <div class="view-section" id="view-profile">
+                <div class="profile-header-grid">
+                    <div class="profile-dp-large" id="profileDpIcon">🥀</div>
+                    <div class="profile-meta-info">
+                        <div class="profile-username-row">
+                            <h2 style="font-size: 20px;" id="profileUsernameText">Saa…chi🥀</h2>
+                            <button class="edit-profile-btn" onclick="openEditProfile()">Edit profile</button>
+                        </div>
+                        <div class="profile-stats-bar">
+                            <div><b id="postCount">1</b> posts</div>
+                            <div><b id="followerCount">4</b> followers</div>
+                            <div><b id="followingCount">3</b> following</div>
+                        </div>
+                        <div class="profile-bio-text">
+                            <b>Selene ☾</b><br>
+                            ✧ dreamer with a starry mind<br>
+                            ✧ music ∙ books ∙ coffee ☕<br>
+                            <a href="#" style="color: #e0f1ff; text-decoration: none;">🔗 spotify.com/user/starlight</a>
+                        </div>
+                    </div>
+                </div>
 
-# 2. STORIES & NOTES
-with tab_stories:
-    st.subheader("📸 Stories & Notes Feed")
-    
-    st.markdown("### 💭 Notes from Everyone")
-    user_note = st.text_input("Update your Note (60 chars max):", max_chars=60, placeholder="What's on your mind?")
-    if st.button("Publish Note 🎵"):
-        if user_note.strip():
-            st.session_state.notes[current_logged_user] = user_note.strip()
-            st.success("Your note updated!")
-            st.rerun()
+                <div class="tray-wrapper" style="border: none;">
+                    <div class="horizontal-scroll-tray">
+                        <div class="story-node"><div class="story-ring-gradient seen"><div class="story-avatar-inner">🌌</div></div><div class="story-label-text">sky ✧</div></div>
+                        <div class="story-node"><div class="story-ring-gradient seen"><div class="story-avatar-inner">🎧</div></div><div class="story-label-text">music ♫</div></div>
+                        <div class="story-node"><div class="story-ring-gradient seen"><div class="story-avatar-inner">📖</div></div><div class="story-label-text">diary ✎</div></div>
+                        <div class="story-node"><div class="story-ring-gradient seen"><div class="story-avatar-inner">🖤</div></div><div class="story-label-text">me 🤍</div></div>
+                    </div>
+                </div>
 
-    st.markdown("#### 🌟 Active Notes by Users")
-    for user, note in st.session_state.notes.items():
-        st.info(f"💭 **@{user}**: {note}")
+                <div class="posts-grid-container" id="profileGridContainer"></div>
+            </div>
 
-    st.divider()
+        </div>
 
-    st.markdown("### 📸 Add to Your Story")
-    story_img = st.file_uploader("Upload Story Image", type=["jpg", "png", "jpeg"], key="story_up")
-    if st.button("Publish Story ✨"):
-        if story_img:
-            st.session_state.stories.append({
-                "username": current_logged_user,
-                "image": story_img.getvalue()
-            })
-            st.success("Story posted successfully!")
-            st.rerun()
+        <!-- Right Sidebar (Followers List) -->
+        <div class="right-sidebar">
+            <div class="user-profile-summary">
+                <div class="user-profile-info">
+                    <div class="user-dp" id="sideUserDp">🥀</div>
+                    <div class="user-names">
+                        <span class="user-handle" id="sideUserHandle">Saa…chi🥀</span>
+                        <span class="user-fullname">Selene ☾</span>
+                    </div>
+                </div>
+                <button class="switch-btn" onclick="openEditProfile()">Switch</button>
+            </div>
 
-    st.markdown("#### ⭕ Friends & Active Stories")
-    if not st.session_state.stories:
-        st.info("No active stories right now.")
-    else:
-        for idx, story in enumerate(st.session_state.stories):
-            with st.expander(f"⭕ Story by @{story['username']}"):
-                st.image(story["image"], use_container_width=True)
+            <div class="suggestions-header">
+                <span class="suggestions-title">Followers for you</span>
+                <span class="see-all-btn">See All</span>
+            </div>
 
-# 3. REELS & REPOST
-with tab_reels:
-    st.subheader("🎬 Eclipse Reels")
-    
-    with st.expander("➕ Upload New Reel"):
-        reel_file = st.file_uploader("Upload Reel Video (.mp4)", type=["mp4", "mov"], key="reel_up")
-        reel_caption = st.text_input("Reel Caption", placeholder="Write something about your reel...")
-        if st.button("Publish Reel 🚀"):
-            if reel_file:
-                st.session_state.reels.insert(0, {
-                    "username": current_logged_user,
-                    "video": reel_file.getvalue(),
-                    "caption": reel_caption,
-                    "likes": 0,
-                    "liked": False,
-                    "reposted_by": None
-                })
-                st.success("Reel published successfully! 🎉")
-                st.rerun()
-            else:
-                st.warning("Please upload a video file.")
+            <div class="followers-list" id="followersListContainer"></div>
+        </div>
 
-    st.divider()
+    </div>
 
-    if not st.session_state.reels:
-        st.info("No reels available yet. Upload your first reel above! 🎬")
-    else:
-        for r_idx, reel in enumerate(st.session_state.reels):
-            with st.container(border=True):
-                if reel.get("reposted_by"):
-                    st.caption(f"🔄 **Reposted by @{reel['reposted_by']}** (Original: @{reel['username']})")
-                else:
-                    st.markdown(f"### 👤 @{reel['username']}")
+    <!-- Bottom Navigation Bar (Mobile View) -->
+    <div class="bottom-mobile-nav">
+        <button class="action-btn-item" onclick="switchView('feed')">🏠</button>
+        <button class="action-btn-item" onclick="switchView('reels')">🎬</button>
+        <button class="action-btn-item" onclick="switchView('chat')">💬</button>
+        <button class="action-btn-item" onclick="openCreateStory()">➕</button>
+        <button class="action-btn-item" onclick="switchView('profile')">👤</button>
+    </div>
 
-                st.video(reel["video"])
-                if reel["caption"]:
-                    st.write(reel["caption"])
-                
-                r_col1, r_col2 = st.columns(2)
-                
-                r_liked = reel.get("liked", False)
-                r_likes = reel.get("likes", 0)
-                r_label = "❤️ Liked" if r_liked else "🤍 Like"
-                with r_col1:
-                    if st.button(f"{r_label} ({r_likes})", key=f"reel_like_{r_idx}"):
-                        reel["liked"] = not r_liked
-                        reel["likes"] = r_likes + 1 if reel["liked"] else max(0, r_likes - 1)
-                        st.rerun()
+    <!-- Story Viewer Modal -->
+    <div class="modal-overlay" id="storyModal">
+        <div class="story-modal-card">
+            <button class="close-modal-btn" onclick="closeStoryModal()">✕</button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="post-avatar-circle" id="modalStoryAvatar">✨</div>
+                <b id="modalStoryUser">@cosmic_star</b>
+            </div>
+            <div style="font-size: 24px; text-align: center; color: #fff;" id="modalStoryContent">
+                Beautiful night sky! 🔭
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <button class="action-btn-item" id="modalStoryLikeBtn" onclick="toggleStoryLike()">🤍</button>
+                <small style="color: #ffd700;" id="modalStorySeen">👀 Seen by @cosmic_star</small>
+            </div>
+        </div>
+    </div>
 
-                with r_col2:
-                    if st.button("🔄 Repost Reel", key=f"repost_btn_{r_idx}"):
-                        reposted_reel = {
-                            "username": reel["username"],
-                            "video": reel["video"],
-                            "caption": reel["caption"],
-                            "likes": 0,
-                            "liked": False,
-                            "reposted_by": current_logged_user
-                        }
-                        st.session_state.reels.insert(0, reposted_reel)
-                        st.session_state.notification_logs.append(f"🔄 You reposted a reel by @{reel['username']}!")
-                        st.success(f"Reel reposted to your feed! 🚀")
-                        st.rerun()
+    <!-- JavaScript Application State -->
+    <script>
+        const state = {
+            currentUser: "Saa…chi🥀",
+            avatar: "🥀",
+            note: "Night vibes 🌙",
+            followers: [
+                { handle: "@starlight_99", name: "Starlight", dp: "🌟", isFollowing: true },
+                { handle: "@eclipse_fan", name: "Eclipse Fan", dp: "🌒", isFollowing: true },
+                { handle: "@moon_walker", name: "Moon Walker", dp: "🪐", isFollowing: false },
+                { handle: "@galaxy_boy", name: "Galaxy Boy", dp: "🌌", isFollowing: false }
+            ],
+            stories: [
+                { user: "Saa…chi🥀", avatar: "🥀", content: "My Moonlit Story 🌙✨", seen: false, liked: false },
+                { user: "@cosmic_star", avatar: "✨", content: "Beautiful night sky! 🔭", seen: false, liked: false },
+                { user: "@nebula_dreamer", avatar: "🌌", content: "Exploring galaxies 🌌", seen: false, liked: false },
+                { user: "@lunar_girl", avatar: "⭐", content: "Moonlight magic ⭐", seen: true, liked: false }
+            ],
+            reels: [
+                { media: "🌌", user: "@galaxy_boy", caption: "Night aesthetic vibes under the starlight ✨ #eclipse", likes: 12400, liked: true },
+                { media: "🩰", user: "@selene_dance", caption: "Midnight ballet practice under the moon 🌙", likes: 8900, liked: false },
+                { media: "🔭", user: "@stargazer_me", caption: "Look closely at Saturn's rings tonight! 🪐", likes: 23100, liked: false }
+            ],
+            currentReelIdx: 0,
+            notes: [
+                { user: "Saa…chi🥀", avatar: "🥀", note: "Night vibes 🌙" },
+                { user: "@cosmic_star", avatar: "✨", note: "Stargazing ✨" },
+                { user: "@starlight_99", avatar: "🌟", note: "Dreaming big 🌟" }
+            ],
+            posts: [
+                { id: 1, user: "@astronomy_lover", avatar: "🔭", content: "The full moon tonight looks breathtaking! 🌕✨", likes: 42, liked: false },
+                { id: 2, user: "@lunar_art", avatar: "🎨", content: "Just finished painting the Eclipse moon theme! 🎨🌙", likes: 89, liked: false }
+            ],
+            myPosts: [
+                { id: 101, content: "Exploring the moonlit universe with Eclipse! 🌙✨", likes: 12 }
+            ],
+            activeChatUser: "@cosmic_star",
+            chats: {
+                "@cosmic_star": [
+                    { sender: "@cosmic_star", text: "Hey Saachi! Loving the Eclipse vibe 🌙" },
+                    { sender: "Saa…chi🥀", text: "Thank you so much! ✨" }
+                ],
+                "@starlight_99": [
+                    { sender: "@starlight_99", text: "Are you coming for stargazing tonight?" }
+                ]
+            },
+            currentStoryIdx: null
+        };
 
-# 4. CREATE POST
-with tab_post:
-    st.subheader("✍️ Create a New Post")
-    u_name = st.text_input("Your username", value=current_logged_user)
-    up_img = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg", "webp"])
-    u_cap = st.text_area("Write Caption", placeholder="What's on your mind?")
-
-    if st.button("📮 Publish", type="primary"):
-        if not u_name.strip():
-            st.warning("Please enter username.")
-        elif not u_cap.strip() and up_img is None:
-            st.warning("Please add caption or image.")
-        else:
-            img_bytes = up_img.getvalue() if up_img else None
-            new_p = {
-                "id": st.session_state.next_post_id,
-                "username": u_name.strip(),
-                "caption": u_cap.strip(),
-                "image": img_bytes,
-                "likes": 0,
-                "liked": False,
-                "comments": []
-            }
-            st.session_state.posts.insert(0, new_p)
-            st.session_state.next_post_id += 1
-            st.success("Post published on Eclipse! 🎉")
-
-# 5. DIRECT MESSAGES
-with tab_chat:
-    st.subheader("💬 Direct Messages (Chat)")
-    
-    following_users = [
-        target for target, followers in st.session_state.follows.items() 
-        if current_logged_user.lower() in followers
-    ]
-    
-    if following_users:
-        recipient = st.selectbox("Select user to chat with:", following_users)
-    else:
-        recipient = st.text_input("Chat with (Username):", value="friend_user")
-        
-    st.divider()
-
-    chat_history = [
-        m for m in st.session_state.messages 
-        if (m["sender"] == current_logged_user and m["receiver"] == recipient.lower())
-        or (m["sender"] == recipient.lower() and m["receiver"] == current_logged_user)
-    ]
-
-    if not chat_history:
-        st.caption("No messages in this chat yet.")
-    else:
-        for msg in chat_history:
-            if msg["sender"] == current_logged_user:
-                st.write(f"🟢 **You**: {msg['text']}")
-            else:
-                st.write(f"🔵 **@{msg['sender']}**: {msg['text']}")
-
-    st.divider()
-    msg_text = st.text_input("Type a message...", key="chat_input")
-    if st.button("Send 🚀"):
-        if msg_text.strip():
-            st.session_state.messages.append({
-                "sender": current_logged_user,
-                "receiver": recipient.lower().strip(),
-                "text": msg_text.strip()
-            })
-            st.rerun()
-
-# 6. NOTIFICATIONS
-with tab_notifs:
-    st.subheader("🔔 Notification Center")
-    st.markdown("Recent activity and follower alerts:")
-    
-    if not st.session_state.notification_logs:
-        st.info("No notifications yet.")
-    else:
-        for log in reversed(st.session_state.notification_logs):
-            st.info(log)
-
-# 7. PROFILE SECTION
-with tab_profile:
-    st.subheader("👤 My Profile")
-    p_user = st.text_input("Enter Profile Username", value=current_logged_user)
-    p_user_clean = p_user.strip().lower()
-    
-    if p_user_clean not in st.session_state.user_profiles:
-        st.session_state.user_profiles[p_user_clean] = {
-            "bio": "Welcome to Eclipse! ✨", 
-            "dp": None,
-            "is_private": False
+        function init() {
+            renderStoriesTray();
+            renderNotesTray();
+            renderPosts();
+            renderFollowersSidebar();
+            renderChatsList();
+            renderChatMessages();
+            renderProfile();
+            renderReel();
         }
 
-    user_p = st.session_state.user_profiles[p_user_clean]
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('view-' + viewName).classList.add('active');
+            const navBtn = document.getElementById('nav-btn-' + viewName);
+            if (navBtn) navBtn.classList.add('active');
+        }
 
-    with st.expander("⚙️ Edit Profile & Privacy Settings"):
-        nbio = st.text_input("Bio", value=user_p.get("bio", ""))
-        ndp = st.file_uploader("Profile Pic", type=["jpg", "png", "jpeg"])
-        
-        is_priv = st.toggle("🔒 Private Account", value=user_p.get("is_private", False))
+        function renderReel() {
+            const r = state.reels[state.currentReelIdx];
+            document.getElementById('reelMediaBox').innerText = r.media;
+            document.getElementById('reelUsername').innerText = r.user;
+            document.getElementById('reelCaption').innerText = r.caption;
+            document.getElementById('reelLikeCount').innerText = r.likes;
+            document.getElementById('reelLikeIcon').innerText = r.liked ? '❤️' : '🤍';
+        }
 
-        if st.button("Save Changes"):
-            user_p["bio"] = nbio
-            user_p["is_private"] = is_priv
-            if ndp:
-                user_p["dp"] = ndp.getvalue()
-            st.success("Profile & Privacy settings updated!")
-            st.rerun()
+        function toggleReelLike() {
+            const r = state.reels[state.currentReelIdx];
+            r.liked = !r.liked;
+            r.likes += r.liked ? 1 : -1;
+            renderReel();
+        }
 
-    c1, c2 = st.columns([1, 3])
-    with c1:
-        if user_p.get("dp"):
-            st.image(user_p["dp"], width=80)
-        else:
-            st.markdown("## 👤")
-    with c2:
-        badge = "🔒 Private Account" if user_p.get("is_private") else "🌐 Public Account"
-        st.markdown(f"### @{p_user}")
-        st.caption(f"Status: **{badge}**")
-        st.write(f"📝 {user_p.get('bio', '')}")
+        function nextReel() {
+            state.currentReelIdx = (state.currentReelIdx + 1) % state.reels.length;
+            renderReel();
+        }
 
-    followers_set = st.session_state.follows.get(p_user_clean, set())
-    followers_list = list(followers_set)
-    
-    following_list = [
-        target for target, followers in st.session_state.follows.items() 
-        if p_user_clean in followers
-    ]
+        function renderStoriesTray() {
+            const container = document.getElementById('storiesTrayContainer');
+            let html = `
+                <div class="story-node" onclick="openCreateStory()">
+                    <div class="story-ring-gradient">
+                        <div class="story-avatar-inner">${state.avatar}</div>
+                        <div class="story-add-badge">+</div>
+                    </div>
+                    <div class="story-label-text">Your Story</div>
+                </div>
+            `;
 
-    my_posts = [p for p in st.session_state.posts if p.get("username", "").lower() == p_user_clean]
+            state.stories.forEach((s, idx) => {
+                if (s.user !== state.currentUser) {
+                    html += `
+                        <div class="story-node" onclick="viewStory(${idx})">
+                            <div class="story-ring-gradient ${s.seen ? 'seen' : ''}">
+                                <div class="story-avatar-inner">${s.avatar}</div>
+                            </div>
+                            <div class="story-label-text">${s.user}</div>
+                        </div>
+                    `;
+                }
+            });
 
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Posts", len(my_posts))
-    m2.metric("Followers", len(followers_list))
-    m3.metric("Following", len(following_list))
+            container.innerHTML = html;
+        }
 
-    st.divider()
+        function renderNotesTray() {
+            const container = document.getElementById('notesTrayContainer');
+            let html = '';
 
-    col_f1, col_f2 = st.columns(2)
-    
-    with col_f1:
-        with st.expander(f"👥 View Followers ({len(followers_list)})"):
-            if not followers_list:
-                st.caption("No followers yet.")
-            else:
-                for f_user in followers_list:
-                    st.write(f"👤 **@{f_user}**")
+            state.notes.forEach(n => {
+                html += `
+                    <div class="story-node" onclick="selectChat('${n.user}')">
+                        <div class="story-ring-gradient seen">
+                            <div class="note-bubble-popup">${n.note}</div>
+                            <div class="story-avatar-inner">${n.avatar}</div>
+                        </div>
+                        <div class="story-label-text">${n.user === state.currentUser ? 'Your note' : n.user}</div>
+                    </div>
+                `;
+            });
 
-    with col_f2:
-        with st.expander(f"👥 View Following ({len(following_list)})"):
-            if not following_list:
-                st.caption("Not following anyone yet.")
-            else:
-                for f_user in following_list:
-                    st.write(f"👤 **@{f_user}**")
+            container.innerHTML = html;
+        }
 
-    st.divider()
+        function renderPosts() {
+            const container = document.getElementById('feedPostsContainer');
+            let html = '';
 
-    st.markdown("### 🖼️ Your Posts")
-    if not my_posts:
-        st.info(f"No posts found for @{p_user}")
-    else:
-        for i, p in enumerate(my_posts):
-            show_post(p, i)
+            state.posts.forEach((p, idx) => {
+                html += `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="post-user-info">
+                                <div class="post-avatar-circle">${p.avatar}</div>
+                                <div class="post-username-text">${p.user}</div>
+                            </div>
+                            <div>•••</div>
+                        </div>
+                        <div class="post-media-box">${p.avatar}</div>
+                        <div class="post-actions-bar">
+                            <div class="action-btns-left">
+                                <button class="action-btn-item ${p.liked ? 'liked' : ''}" onclick="togglePostLike(${idx})">${p.liked ? '❤️' : '🤍'}</button>
+                                <button class="action-btn-item">💬</button>
+                                <button class="action-btn-item">✈️</button>
+                            </div>
+                            <button class="action-btn-item">🔖</button>
+                        </div>
+                        <div class="post-likes-count">${p.likes} likes</div>
+                        <div class="post-caption-box"><b>${p.user}</b>${p.content}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderFollowersSidebar() {
+            const container = document.getElementById('followersListContainer');
+            let html = '';
+
+            state.followers.forEach((f, idx) => {
+                html += `
+                    <div class="follower-item">
+                        <div class="follower-info">
+                            <div class="follower-dp">${f.dp}</div>
+                            <div class="user-names">
+                                <span class="user-handle">${f.handle}</span>
+                                <span class="user-fullname">${f.name}</span>
+                            </div>
+                        </div>
+                        <button class="follow-action-btn" onclick="toggleFollow(${idx})">${f.isFollowing ? 'Following' : 'Follow'}</button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function toggleFollow(idx) {
+            state.followers[idx].isFollowing = !state.followers[idx].isFollowing;
+            renderFollowersSidebar();
+        }
+
+        function togglePostLike(idx) {
+            const p = state.posts[idx];
+            p.liked = !p.liked;
+            p.likes += p.liked ? 1 : -1;
+            renderPosts();
+        }
+
+        function renderChatsList() {
+            const container = document.getElementById('chatContactsList');
+            let html = '';
+
+            Object.keys(state.chats).forEach(user => {
+                html += `
+                    <div class="contact-item-row ${user === state.activeChatUser ? 'active' : ''}" onclick="selectChat('${user}')">
+                        <div class="contact-dp">👤</div>
+                        <div style="font-size: 13px; font-weight: 600;">${user}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function selectChat(user) {
+            if (!state.chats[user]) {
+                state.chats[user] = [];
+            }
+            state.activeChatUser = user;
+            document.getElementById('activeChatUsername').innerText = user;
+            renderChatsList();
+            renderChatMessages();
+            switchView('chat');
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chatMessagesArea');
+            let html = '';
+
+            const msgs = state.chats[state.activeChatUser] || [];
+            msgs.forEach(m => {
+                const isSent = m.sender === state.currentUser;
+                html += `
+                    <div class="message-bubble ${isSent ? 'sent' : 'received'}">
+                        ${m.text}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleChatKeyPress(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInputField');
+            const text = input.value.trim();
+            if (text) {
+                state.chats[state.activeChatUser].push({ sender: state.currentUser, text: text });
+                input.value = '';
+                renderChatMessages();
+
+                setTimeout(() => {
+                    state.chats[state.activeChatUser].push({
+                        sender: state.activeChatUser,
+                        text: "Got it! Loving Eclipse 🌙✨"
+                    });
+                    renderChatMessages();
+                }, 1000);
+            }
+        }
+
+        function renderProfile() {
+            document.getElementById('profileDpIcon').innerText = state.avatar;
+            document.getElementById('sideUserDp').innerText = state.avatar;
+            document.getElementById('postCount').innerText = state.myPosts.length;
+            document.getElementById('followerCount').innerText = state.followers.length;
+
+            const grid = document.getElementById('profileGridContainer');
+            let html = '';
+            state.myPosts.forEach(() => {
+                html += `<div class="grid-post-square">🌙</div>`;
+            });
+            grid.innerHTML = html;
+        }
+
+        function viewStory(idx) {
+            state.currentStoryIdx = idx;
+            const s = state.stories[idx];
+            s.seen = true;
+
+            document.getElementById('modalStoryAvatar').innerText = s.avatar;
+            document.getElementById('modalStoryUser').innerText = s.user;
+            document.getElementById('modalStoryContent').innerText = s.content;
+            document.getElementById('modalStoryLikeBtn').innerText = s.liked ? '❤️' : '🤍';
+
+            document.getElementById('storyModal').classList.add('active');
+            renderStoriesTray();
+        }
+
+        function closeStoryModal() {
+            document.getElementById('storyModal').classList.remove('active');
+        }
+
+        function toggleStoryLike() {
+            if (state.currentStoryIdx !== null) {
+                const s = state.stories[state.currentStoryIdx];
+                s.liked = !s.liked;
+                document.getElementById('modalStoryLikeBtn').innerText = s.liked ? '❤️' : '🤍';
+            }
+        }
+
+        function openCreateStory() {
+            const storyText = prompt("What's on your story?");
+            if (storyText) {
+                state.stories.unshift({
+                    user: state.currentUser,
+                    avatar: state.avatar,
+                    content: storyText,
+                    seen: false,
+                    liked: false
+                });
+                renderStoriesTray();
+                alert("Story posted successfully!");
+            }
+        }
+
+        function openEditProfile() {
+            const newAvatar = prompt("Choose new avatar icon (e.g. 🥀, 🌙, ✨, 🦋):", state.avatar);
+            if (newAvatar) {
+                state.avatar = newAvatar;
+                renderProfile();
+                renderStoriesTray();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
+"""
+
+st.components.v1.html(html_code, height=800, scrolling=True)
